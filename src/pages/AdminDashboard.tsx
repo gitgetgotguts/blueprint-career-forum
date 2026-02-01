@@ -2,23 +2,62 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useOffers } from '@/contexts/OffersContext';
-import { LogOut, Users, Building2, Calendar, TrendingUp, Settings, FileText, UserPlus, Trash2, GraduationCap, Briefcase, CheckCircle, XCircle, Clock, Eye, Mail, FolderOpen, ExternalLink } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { LogOut, Users, Building2, Calendar, TrendingUp, Settings, FileText, UserPlus, Trash2, GraduationCap, Briefcase, CheckCircle, XCircle, Clock, Eye, Mail, FolderOpen, ExternalLink, FileCheck, Send, Activity, Target, BarChart3, Award, Percent, Star } from 'lucide-react';
 import BlueprintBackground from '@/components/BlueprintBackground';
 import emailjs from '@emailjs/browser';
 
-// Mock data for dashboard
-const stats = [
-  { label: 'Registered Students', value: '847', icon: Users, change: '+12%' },
-  { label: 'Partner Companies', value: '52', icon: Building2, change: '+3' },
-  { label: 'Days Until Event', value: '318', icon: Calendar, change: '' },
-  { label: 'Website Visits', value: '3,241', icon: TrendingUp, change: '+28%' },
-];
+interface TopCompany {
+  name: string;
+  offerCount: number;
+  applicationCount: number;
+}
+
+interface TopOffer {
+  title: string;
+  companyName: string;
+  applicationCount: number;
+  type: string;
+}
+
+interface AnalyticsData {
+  totalStudents: number;
+  totalCompanies: number;
+  totalOffers: number;
+  totalApplications: number;
+  totalProjects: number;
+  pendingOffers: number;
+  approvedOffers: number;
+  rejectedOffers: number;
+  pendingApplications: number;
+  acceptedApplications: number;
+  rejectedApplications: number;
+  recentUsers: { name: string; role: string; created_at: string }[];
+  offersByType: { job: number; pfe: number; stage: number };
+  applicationsThisWeek: number;
+  applicationsLastWeek: number;
+  // New metrics
+  studentsWithProfiles: number;
+  profileCompletionRate: number;
+  avgApplicationsPerOffer: number;
+  avgApplicationsPerStudent: number;
+  acceptanceRate: number;
+  topCompanies: TopCompany[];
+  topOffers: TopOffer[];
+  recentApplications: { studentName: string; offerTitle: string; appliedAt: string; status: string }[];
+  companiesWithOffers: number;
+  studentsWithApplications: number;
+  offersThisMonth: number;
+  offersLastMonth: number;
+}
 
 const AdminDashboard = () => {
   const { isAuthenticated, currentUser, logout, users, addUser, deleteUser } = useAuth();
-  const { offers, getPendingOffers, approveOffer, rejectOffer, getApplicationsByOffer } = useOffers();
+  const { offers, getPendingOffers, approveOffer, rejectOffer, getApplicationsByOffer, applications } = useOffers();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
   // New user form state
   const [newUser, setNewUser] = useState({
@@ -41,9 +80,195 @@ const AdminDashboard = () => {
   const [expandedOfferId, setExpandedOfferId] = useState<string | null>(null);
 
   // Get offer stats
-  const pendingOffers = getPendingOffers();
-  const approvedOffers = offers.filter(o => o.status === 'approved');
-  const rejectedOffers = offers.filter(o => o.status === 'rejected');
+  const pendingOffersList = getPendingOffers();
+  const approvedOffersList = offers.filter(o => o.status === 'approved');
+  const rejectedOffersList = offers.filter(o => o.status === 'rejected');
+
+  // Fetch analytics from Supabase
+  const fetchAnalytics = async () => {
+    try {
+      setLoadingAnalytics(true);
+
+      // Fetch all data in parallel
+      const [
+        { data: profiles },
+        { data: offersData },
+        { data: applicationsData },
+        { data: projectsData }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*'),
+        supabase.from('offers').select('*'),
+        supabase.from('applications').select('*'),
+        supabase.from('projects').select('*')
+      ]);
+
+      const students = (profiles || []).filter(p => p.role === 'student');
+      const companies = (profiles || []).filter(p => p.role === 'company');
+      
+      const pending = (offersData || []).filter(o => o.status === 'pending');
+      const approved = (offersData || []).filter(o => o.status === 'approved');
+      const rejected = (offersData || []).filter(o => o.status === 'rejected');
+
+      const pendingApps = (applicationsData || []).filter(a => a.status === 'pending');
+      const acceptedApps = (applicationsData || []).filter(a => a.status === 'accepted');
+      const rejectedApps = (applicationsData || []).filter(a => a.status === 'rejected');
+
+      // Offers by type
+      const jobOffers = (offersData || []).filter(o => o.type === 'job').length;
+      const pfeOffers = (offersData || []).filter(o => o.type === 'pfe').length;
+      const stageOffers = (offersData || []).filter(o => o.type === 'stage').length;
+
+      // Recent users (last 5)
+      const recentUsers = (profiles || [])
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
+        .map(p => ({ name: p.name, role: p.role, created_at: p.created_at }));
+
+      // Applications this week vs last week
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+      const appsThisWeek = (applicationsData || []).filter(a => 
+        new Date(a.applied_at) >= oneWeekAgo
+      ).length;
+
+      const appsLastWeek = (applicationsData || []).filter(a => 
+        new Date(a.applied_at) >= twoWeeksAgo && new Date(a.applied_at) < oneWeekAgo
+      ).length;
+
+      // Students with profile data (career goals or about filled)
+      const studentsWithProfiles = students.filter(s => s.career_goals || s.about).length;
+      const profileCompletionRate = students.length > 0 
+        ? Math.round((studentsWithProfiles / students.length) * 100) 
+        : 0;
+
+      // Average applications per offer (only approved offers)
+      const avgApplicationsPerOffer = approved.length > 0
+        ? Math.round(((applicationsData || []).length / approved.length) * 10) / 10
+        : 0;
+
+      // Average applications per student
+      const studentsWhoApplied = [...new Set((applicationsData || []).map(a => a.student_id))];
+      const avgApplicationsPerStudent = studentsWhoApplied.length > 0
+        ? Math.round(((applicationsData || []).length / studentsWhoApplied.length) * 10) / 10
+        : 0;
+
+      // Acceptance rate
+      const decidedApps = acceptedApps.length + rejectedApps.length;
+      const acceptanceRate = decidedApps > 0 
+        ? Math.round((acceptedApps.length / decidedApps) * 100) 
+        : 0;
+
+      // Top companies by offers and applications
+      const companyOfferCounts: Record<string, { name: string; offerCount: number; applicationCount: number }> = {};
+      
+      for (const offer of (offersData || [])) {
+        const company = companies.find(c => c.id === offer.company_id);
+        const companyName = company?.name || 'Unknown';
+        
+        if (!companyOfferCounts[offer.company_id]) {
+          companyOfferCounts[offer.company_id] = { name: companyName, offerCount: 0, applicationCount: 0 };
+        }
+        companyOfferCounts[offer.company_id].offerCount++;
+        
+        // Count applications for this offer
+        const offerApps = (applicationsData || []).filter(a => a.offer_id === offer.id);
+        companyOfferCounts[offer.company_id].applicationCount += offerApps.length;
+      }
+
+      const topCompanies: TopCompany[] = Object.values(companyOfferCounts)
+        .sort((a, b) => b.applicationCount - a.applicationCount)
+        .slice(0, 5);
+
+      // Top offers by applications
+      const topOffers: TopOffer[] = (offersData || [])
+        .filter(o => o.status === 'approved')
+        .map(o => {
+          const appCount = (applicationsData || []).filter(a => a.offer_id === o.id).length;
+          const company = companies.find(c => c.id === o.company_id);
+          return {
+            title: o.title,
+            companyName: company?.name || 'Unknown',
+            applicationCount: appCount,
+            type: o.type
+          };
+        })
+        .sort((a, b) => b.applicationCount - a.applicationCount)
+        .slice(0, 5);
+
+      // Recent applications (last 5)
+      const recentApplications = (applicationsData || [])
+        .sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime())
+        .slice(0, 5)
+        .map(app => {
+          const student = students.find(s => s.id === app.student_id);
+          const offer = (offersData || []).find(o => o.id === app.offer_id);
+          return {
+            studentName: student?.name || 'Unknown',
+            offerTitle: offer?.title || 'Unknown',
+            appliedAt: app.applied_at,
+            status: app.status
+          };
+        });
+
+      // Companies that have posted at least one offer
+      const companiesWithOffers = [...new Set((offersData || []).map(o => o.company_id))].length;
+
+      // Students who have applied to at least one offer
+      const studentsWithApplications = studentsWhoApplied.length;
+
+      // Offers this month vs last month
+      const offersThisMonth = (offersData || []).filter(o => 
+        new Date(o.created_at) >= oneMonthAgo
+      ).length;
+
+      const offersLastMonth = (offersData || []).filter(o => 
+        new Date(o.created_at) >= twoMonthsAgo && new Date(o.created_at) < oneMonthAgo
+      ).length;
+
+      setAnalytics({
+        totalStudents: students.length,
+        totalCompanies: companies.length,
+        totalOffers: (offersData || []).length,
+        totalApplications: (applicationsData || []).length,
+        totalProjects: (projectsData || []).length,
+        pendingOffers: pending.length,
+        approvedOffers: approved.length,
+        rejectedOffers: rejected.length,
+        pendingApplications: pendingApps.length,
+        acceptedApplications: acceptedApps.length,
+        rejectedApplications: rejectedApps.length,
+        recentUsers,
+        offersByType: { job: jobOffers, pfe: pfeOffers, stage: stageOffers },
+        applicationsThisWeek: appsThisWeek,
+        applicationsLastWeek: appsLastWeek,
+        // New metrics
+        studentsWithProfiles,
+        profileCompletionRate,
+        avgApplicationsPerOffer,
+        avgApplicationsPerStudent,
+        acceptanceRate,
+        topCompanies,
+        topOffers,
+        recentApplications,
+        companiesWithOffers,
+        studentsWithApplications,
+        offersThisMonth,
+        offersLastMonth,
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [users, offers, applications]);
 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== 'admin') {
@@ -240,7 +465,8 @@ const AdminDashboard = () => {
           <div className="flex flex-wrap gap-2 sm:gap-4 mb-8 border-b border-primary/20 pb-4">
             {[
               { id: 'overview', label: 'Overview', icon: TrendingUp },
-              { id: 'offers', label: 'Job Offers', icon: Briefcase, badge: pendingOffers.length },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+              { id: 'offers', label: 'Job Offers', icon: Briefcase, badge: pendingOffersList.length },
               { id: 'users', label: 'User Management', icon: UserPlus },
               { id: 'companies', label: 'Companies', icon: Building2 },
               { id: 'settings', label: 'Settings', icon: Settings },
@@ -268,26 +494,64 @@ const AdminDashboard = () => {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <>
-              {/* Stats Grid */}
+              {/* Main Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {stats.map((stat) => (
-                  <div key={stat.label} className="blueprint-card p-6 glow-hover">
-                    <div className="flex items-start justify-between mb-4">
-                      <stat.icon className="w-8 h-8 text-primary" />
-                      {stat.change && (
-                        <span className="font-mono text-xs text-green-500">{stat.change}</span>
-                      )}
-                    </div>
-                    <div className="font-heading text-3xl text-foreground mb-1">{stat.value}</div>
-                    <div className="font-mono text-xs text-muted-foreground tracking-widest">
-                      {stat.label.toUpperCase()}
-                    </div>
+                <div className="blueprint-card p-6 glow-hover">
+                  <div className="flex items-start justify-between mb-4">
+                    <GraduationCap className="w-8 h-8 text-primary" />
                   </div>
-                ))}
+                  <div className="font-heading text-3xl text-foreground mb-1">
+                    {loadingAnalytics ? '...' : analytics?.totalStudents || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    REGISTERED STUDENTS
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-6 glow-hover">
+                  <div className="flex items-start justify-between mb-4">
+                    <Building2 className="w-8 h-8 text-accent" />
+                  </div>
+                  <div className="font-heading text-3xl text-foreground mb-1">
+                    {loadingAnalytics ? '...' : analytics?.totalCompanies || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    PARTNER COMPANIES
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-6 glow-hover">
+                  <div className="flex items-start justify-between mb-4">
+                    <Briefcase className="w-8 h-8 text-green-500" />
+                  </div>
+                  <div className="font-heading text-3xl text-foreground mb-1">
+                    {loadingAnalytics ? '...' : analytics?.totalOffers || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    TOTAL JOB OFFERS
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-6 glow-hover">
+                  <div className="flex items-start justify-between mb-4">
+                    <Send className="w-8 h-8 text-purple-500" />
+                    {analytics && analytics.applicationsThisWeek > analytics.applicationsLastWeek && (
+                      <span className="font-mono text-xs text-green-500">
+                        +{analytics.applicationsThisWeek - analytics.applicationsLastWeek} this week
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-heading text-3xl text-foreground mb-1">
+                    {loadingAnalytics ? '...' : analytics?.totalApplications || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    TOTAL APPLICATIONS
+                  </div>
+                </div>
               </div>
 
               {/* Pending Offers Alert */}
-              {pendingOffers.length > 0 && (
+              {pendingOffersList.length > 0 && (
                 <div 
                   onClick={() => setActiveTab('offers')}
                   className="blueprint-card p-6 mb-8 border-yellow-500/40 cursor-pointer hover:border-yellow-500/60 transition-colors"
@@ -296,7 +560,7 @@ const AdminDashboard = () => {
                     <Clock className="w-8 h-8 text-yellow-500" />
                     <div>
                       <div className="font-heading text-xl text-yellow-500">
-                        {pendingOffers.length} PENDING OFFER{pendingOffers.length > 1 ? 'S' : ''}
+                        {pendingOffersList.length} PENDING OFFER{pendingOffersList.length > 1 ? 'S' : ''} NEED REVIEW
                       </div>
                       <div className="font-mono text-sm text-muted-foreground">
                         Click to review and approve/reject offers
@@ -306,8 +570,48 @@ const AdminDashboard = () => {
                 </div>
               )}
 
+              {/* Recent Registrations */}
+              <div className="blueprint-card p-6 mb-8">
+                <h3 className="font-heading text-lg text-primary mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  RECENT REGISTRATIONS
+                </h3>
+                {loadingAnalytics ? (
+                  <div className="text-center py-4 text-muted-foreground font-mono text-sm">Loading...</div>
+                ) : analytics?.recentUsers.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground font-mono text-sm">No users yet</div>
+                ) : (
+                  <div className="space-y-2">
+                    {analytics?.recentUsers.map((user, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 border-b border-primary/10 last:border-0">
+                        <div>
+                          <div className="font-heading text-sm text-foreground">{user.name}</div>
+                          <div className="font-mono text-xs text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <span className={`font-mono text-xs px-2 py-1 ${
+                          user.role === 'admin' ? 'bg-red-500/20 text-red-500' :
+                          user.role === 'company' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'
+                        }`}>
+                          {user.role.toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <button 
+                  onClick={() => setActiveTab('analytics')}
+                  className="blueprint-card p-6 glow-hover text-left hover:border-accent/60 transition-colors"
+                >
+                  <BarChart3 className="w-6 h-6 text-accent mb-3" />
+                  <div className="font-heading text-lg text-foreground mb-1">VIEW ANALYTICS</div>
+                  <div className="font-mono text-xs text-muted-foreground">Detailed metrics & insights</div>
+                </button>
                 <button 
                   onClick={() => setActiveTab('users')}
                   className="blueprint-card p-6 glow-hover text-left hover:border-accent/60 transition-colors"
@@ -333,6 +637,321 @@ const AdminDashboard = () => {
             </>
           )}
 
+          {/* Analytics Tab */}
+          {activeTab === 'analytics' && (
+            <>
+              {/* Key Performance Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="blueprint-card p-4 glow-hover">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Percent className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div className="font-heading text-2xl text-foreground">
+                    {loadingAnalytics ? '...' : `${analytics?.acceptanceRate || 0}%`}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    ACCEPTANCE RATE
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4 glow-hover">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Target className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="font-heading text-2xl text-foreground">
+                    {loadingAnalytics ? '...' : analytics?.avgApplicationsPerOffer || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    AVG APPS / OFFER
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4 glow-hover">
+                  <div className="flex items-center gap-3 mb-2">
+                    <BarChart3 className="w-6 h-6 text-accent" />
+                  </div>
+                  <div className="font-heading text-2xl text-foreground">
+                    {loadingAnalytics ? '...' : analytics?.avgApplicationsPerStudent || 0}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    AVG APPS / STUDENT
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4 glow-hover">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Award className="w-6 h-6 text-purple-500" />
+                  </div>
+                  <div className="font-heading text-2xl text-foreground">
+                    {loadingAnalytics ? '...' : `${analytics?.profileCompletionRate || 0}%`}
+                  </div>
+                  <div className="font-mono text-xs text-muted-foreground tracking-widest">
+                    PROFILE COMPLETION
+                  </div>
+                </div>
+              </div>
+
+              {/* Engagement Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="blueprint-card p-4">
+                  <div className="font-mono text-xs text-muted-foreground mb-1">COMPANIES WITH OFFERS</div>
+                  <div className="font-heading text-2xl text-accent">
+                    {loadingAnalytics ? '...' : analytics?.companiesWithOffers || 0}
+                    <span className="text-sm text-muted-foreground ml-2">
+                      / {analytics?.totalCompanies || 0}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4">
+                  <div className="font-mono text-xs text-muted-foreground mb-1">STUDENTS WHO APPLIED</div>
+                  <div className="font-heading text-2xl text-primary">
+                    {loadingAnalytics ? '...' : analytics?.studentsWithApplications || 0}
+                    <span className="text-sm text-muted-foreground ml-2">
+                      / {analytics?.totalStudents || 0}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4">
+                  <div className="font-mono text-xs text-muted-foreground mb-1">OFFERS THIS MONTH</div>
+                  <div className="font-heading text-2xl text-foreground">
+                    {loadingAnalytics ? '...' : analytics?.offersThisMonth || 0}
+                    {analytics && analytics.offersThisMonth > analytics.offersLastMonth && (
+                      <span className="text-green-500 text-sm ml-2">↑</span>
+                    )}
+                    {analytics && analytics.offersThisMonth < analytics.offersLastMonth && (
+                      <span className="text-red-500 text-sm ml-2">↓</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="blueprint-card p-4">
+                  <div className="font-mono text-xs text-muted-foreground mb-1">STUDENT PROJECTS</div>
+                  <div className="font-heading text-2xl text-purple-500">
+                    {loadingAnalytics ? '...' : analytics?.totalProjects || 0}
+                  </div>
+                </div>
+              </div>
+
+              {/* Offers & Applications Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Offers by Status */}
+                <div className="blueprint-card p-6">
+                  <h3 className="font-heading text-lg text-primary mb-4 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5" />
+                    OFFERS BY STATUS
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/30">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-yellow-500" />
+                        <span className="font-mono text-sm text-yellow-500">PENDING</span>
+                      </div>
+                      <span className="font-heading text-xl text-yellow-500">
+                        {loadingAnalytics ? '...' : analytics?.pendingOffers || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="font-mono text-sm text-green-500">APPROVED</span>
+                      </div>
+                      <span className="font-heading text-xl text-green-500">
+                        {loadingAnalytics ? '...' : analytics?.approvedOffers || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/30">
+                      <div className="flex items-center gap-2">
+                        <XCircle className="w-4 h-4 text-red-500" />
+                        <span className="font-mono text-sm text-red-500">REJECTED</span>
+                      </div>
+                      <span className="font-heading text-xl text-red-500">
+                        {loadingAnalytics ? '...' : analytics?.rejectedOffers || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Offers by Type */}
+                <div className="blueprint-card p-6">
+                  <h3 className="font-heading text-lg text-accent mb-4 flex items-center gap-2">
+                    <FileCheck className="w-5 h-5" />
+                    OFFERS BY TYPE
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border border-primary/20">
+                      <span className="font-mono text-sm text-foreground">STAGE (Internship)</span>
+                      <span className="font-heading text-xl text-primary">
+                        {loadingAnalytics ? '...' : analytics?.offersByType.stage || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border border-primary/20">
+                      <span className="font-mono text-sm text-foreground">PFE (End of Study)</span>
+                      <span className="font-heading text-xl text-primary">
+                        {loadingAnalytics ? '...' : analytics?.offersByType.pfe || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border border-primary/20">
+                      <span className="font-mono text-sm text-foreground">JOB (Full-time)</span>
+                      <span className="font-heading text-xl text-primary">
+                        {loadingAnalytics ? '...' : analytics?.offersByType.job || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Applications Status */}
+              <div className="blueprint-card p-6 mb-8">
+                <h3 className="font-heading text-lg text-purple-500 mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  APPLICATION STATUS
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/30">
+                    <span className="font-mono text-sm text-yellow-500">PENDING REVIEW</span>
+                    <span className="font-heading text-xl text-yellow-500">
+                      {loadingAnalytics ? '...' : analytics?.pendingApplications || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30">
+                    <span className="font-mono text-sm text-green-500">ACCEPTED</span>
+                    <span className="font-heading text-xl text-green-500">
+                      {loadingAnalytics ? '...' : analytics?.acceptedApplications || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/30">
+                    <span className="font-mono text-sm text-red-500">REJECTED</span>
+                    <span className="font-heading text-xl text-red-500">
+                      {loadingAnalytics ? '...' : analytics?.rejectedApplications || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Performers */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Top Companies */}
+                <div className="blueprint-card p-6">
+                  <h3 className="font-heading text-lg text-accent mb-4 flex items-center gap-2">
+                    <Star className="w-5 h-5" />
+                    TOP COMPANIES BY ENGAGEMENT
+                  </h3>
+                  {loadingAnalytics ? (
+                    <div className="text-center py-4 text-muted-foreground font-mono text-sm">Loading...</div>
+                  ) : analytics?.topCompanies.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground font-mono text-sm">No data yet</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {analytics?.topCompanies.map((company, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 border-b border-primary/10 last:border-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-accent w-5">#{idx + 1}</span>
+                            <span className="font-heading text-sm text-foreground">{company.name}</span>
+                          </div>
+                          <div className="flex items-center gap-4 font-mono text-xs">
+                            <span className="text-muted-foreground">
+                              <span className="text-primary">{company.offerCount}</span> offers
+                            </span>
+                            <span className="text-muted-foreground">
+                              <span className="text-green-500">{company.applicationCount}</span> apps
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Top Offers */}
+                <div className="blueprint-card p-6">
+                  <h3 className="font-heading text-lg text-green-500 mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    MOST POPULAR OFFERS
+                  </h3>
+                  {loadingAnalytics ? (
+                    <div className="text-center py-4 text-muted-foreground font-mono text-sm">Loading...</div>
+                  ) : analytics?.topOffers.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground font-mono text-sm">No data yet</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {analytics?.topOffers.map((offer, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 border-b border-primary/10 last:border-0">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-green-500 w-5">#{idx + 1}</span>
+                              <span className="font-heading text-sm text-foreground truncate">{offer.title}</span>
+                              <span className={`font-mono text-[10px] px-1 py-0.5 ${
+                                offer.type === 'job' ? 'bg-accent/20 text-accent' :
+                                offer.type === 'pfe' ? 'bg-primary/20 text-primary' : 'bg-purple-500/20 text-purple-400'
+                              }`}>
+                                {offer.type.toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="font-mono text-xs text-muted-foreground ml-7">{offer.companyName}</div>
+                          </div>
+                          <span className="font-heading text-lg text-green-500 ml-2">{offer.applicationCount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Applications Feed */}
+              <div className="blueprint-card p-6">
+                <h3 className="font-heading text-lg text-purple-500 mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  RECENT APPLICATIONS
+                </h3>
+                {loadingAnalytics ? (
+                  <div className="text-center py-4 text-muted-foreground font-mono text-sm">Loading...</div>
+                ) : analytics?.recentApplications.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground font-mono text-sm">No applications yet</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-primary/20">
+                          <th className="font-mono text-xs text-muted-foreground text-left py-2 px-2">STUDENT</th>
+                          <th className="font-mono text-xs text-muted-foreground text-left py-2 px-2">OFFER</th>
+                          <th className="font-mono text-xs text-muted-foreground text-left py-2 px-2">DATE</th>
+                          <th className="font-mono text-xs text-muted-foreground text-left py-2 px-2">STATUS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analytics?.recentApplications.map((app, idx) => (
+                          <tr key={idx} className="border-b border-primary/10 last:border-0">
+                            <td className="py-2 px-2">
+                              <span className="font-heading text-sm text-foreground">{app.studentName}</span>
+                            </td>
+                            <td className="py-2 px-2">
+                              <span className="font-mono text-sm text-primary">{app.offerTitle}</span>
+                            </td>
+                            <td className="py-2 px-2">
+                              <span className="font-mono text-xs text-muted-foreground">
+                                {new Date(app.appliedAt).toLocaleDateString()}
+                              </span>
+                            </td>
+                            <td className="py-2 px-2">
+                              <span className={`font-mono text-xs px-2 py-1 ${
+                                app.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
+                                app.status === 'accepted' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                              }`}>
+                                {app.status.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
           {/* Offers Tab */}
           {activeTab === 'offers' && (
             <div className="space-y-8">
@@ -340,17 +959,17 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="blueprint-card p-6 border-yellow-500/40">
                   <Clock className="w-8 h-8 text-yellow-500 mb-2" />
-                  <div className="font-heading text-3xl text-foreground">{pendingOffers.length}</div>
+                  <div className="font-heading text-3xl text-foreground">{pendingOffersList.length}</div>
                   <div className="font-mono text-xs text-muted-foreground">PENDING REVIEW</div>
                 </div>
                 <div className="blueprint-card p-6 border-green-500/40">
                   <CheckCircle className="w-8 h-8 text-green-500 mb-2" />
-                  <div className="font-heading text-3xl text-foreground">{approvedOffers.length}</div>
+                  <div className="font-heading text-3xl text-foreground">{approvedOffersList.length}</div>
                   <div className="font-mono text-xs text-muted-foreground">APPROVED</div>
                 </div>
                 <div className="blueprint-card p-6 border-red-500/40">
                   <XCircle className="w-8 h-8 text-red-500 mb-2" />
-                  <div className="font-heading text-3xl text-foreground">{rejectedOffers.length}</div>
+                  <div className="font-heading text-3xl text-foreground">{rejectedOffersList.length}</div>
                   <div className="font-mono text-xs text-muted-foreground">REJECTED</div>
                 </div>
               </div>
@@ -361,13 +980,13 @@ const AdminDashboard = () => {
                   <Clock className="w-5 h-5" />
                   PENDING OFFERS
                 </h3>
-                {pendingOffers.length === 0 ? (
+                {pendingOffersList.length === 0 ? (
                   <div className="blueprint-card p-8 text-center text-muted-foreground">
                     No pending offers to review.
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {pendingOffers.map((offer) => (
+                    {pendingOffersList.map((offer) => (
                       <div key={offer.id} className="blueprint-card p-6 border-yellow-500/40">
                         <div className="flex items-start justify-between mb-4">
                           <div>
@@ -415,13 +1034,13 @@ const AdminDashboard = () => {
                   <CheckCircle className="w-5 h-5" />
                   APPROVED OFFERS
                 </h3>
-                {approvedOffers.length === 0 ? (
+                {approvedOffersList.length === 0 ? (
                   <div className="blueprint-card p-8 text-center text-muted-foreground">
                     No approved offers yet.
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {approvedOffers.map((offer) => {
+                    {approvedOffersList.map((offer) => {
                       const apps = getApplicationsByOffer(offer.id);
                       const isExpanded = expandedOfferId === offer.id;
                       return (
@@ -548,14 +1167,14 @@ const AdminDashboard = () => {
               </div>
 
               {/* Rejected Offers */}
-              {rejectedOffers.length > 0 && (
+              {rejectedOffersList.length > 0 && (
                 <div>
                   <h3 className="font-heading text-xl text-red-500 mb-4 flex items-center gap-2">
                     <XCircle className="w-5 h-5" />
                     REJECTED OFFERS
                   </h3>
                   <div className="space-y-4">
-                    {rejectedOffers.map((offer) => (
+                    {rejectedOffersList.map((offer) => (
                       <div key={offer.id} className="blueprint-card p-6 border-red-500/40">
                         <div className="flex items-start justify-between">
                           <div>
