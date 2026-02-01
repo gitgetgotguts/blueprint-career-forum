@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import NetworkIllustration from './illustrations/NetworkIllustration';
 
 const AboutSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -91,11 +90,22 @@ const AboutSection = () => {
 
           {/* Illustration */}
           <div className="relative scroll-reveal">
-            <NetworkIllustration className="w-full h-auto max-w-lg mx-auto" />
+            <div className="relative rounded-lg overflow-hidden border border-primary/30">
+              <img 
+                src="/stand.png" 
+                alt="Student pitching to company ambassador at career fair" 
+                className="w-full h-auto max-w-lg mx-auto"
+              />
+              {/* Blueprint corner marks */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-primary/60" />
+              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-primary/60" />
+              <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-primary/60" />
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-primary/60" />
+            </div>
             
             {/* Dimension annotations */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 font-mono text-xs text-primary/40 tracking-widest">
-              NETWORK DIAGRAM
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-xs text-primary/40 tracking-widest">
+              DWG: PITCH-01 | NETWORKING ZONE
             </div>
           </div>
         </div>

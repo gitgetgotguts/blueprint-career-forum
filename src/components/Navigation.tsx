@@ -47,13 +47,13 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={() => scrollToSection('register')}
-            className="font-heading text-sm px-4 py-2 border border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300"
+          {/* Login Button */}
+          <a
+            href="#"
+            className="font-heading text-sm px-6 py-2 bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-300"
           >
-            REGISTER
-          </button>
+            LOGIN
+          </a>
         </div>
       </div>
     </nav>

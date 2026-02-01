@@ -1,12 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
-// Placeholder images for past editions - replace with actual images later
+// All images from past editions
 const editionImages = [
-  '/placeholder.svg', // Edition 1 - replace with actual image
-  '/placeholder.svg', // Edition 2 - replace with actual image
-  '/placeholder.svg', // Edition 3 - replace with actual image
-  '/placeholder.svg', // Edition 4 - replace with actual image
-  '/placeholder.svg', // Edition 5 - replace with actual image
+  '/2014.png',
+  '/2015.jpg',
+  '/2017.jpg',
+  '/2018.jpg',
+  '/2019.jpg',
+  '/20199.jpg',
+  '/201999.jpg',
+  '/2020.jpg',
+  '/2021.jpg',
+  '/21211.jpg',
+  '/2022.jpg',
+  '/2023.jpg',
+  '/20233.jpg',
+  '/20333.jpg',
+  '/2024.jpg',
+  '/202444.jpg',
+  '/20244.jpg',
+  '/2444.jpg',
+  '/20255.jpg',
+  '/20000.jpg',
+  '/IMG_9007.jpg',
+  '/IMG_9087.jpg',
+  '/IMG_9291.jpg',
+  '/IMG_9296.jpg',
 ];
 
 const HeroSection = () => {
@@ -15,10 +34,11 @@ const HeroSection = () => {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    // Set target date to March 15, 2025
-    const targetDate = new Date('2025-03-15T09:00:00').getTime();
+    // Set target date to March 15, 2026
+    const targetDate = new Date('2026-03-15T09:00:00').getTime();
 
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -37,13 +57,15 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Image slideshow effect
+  // Image slideshow effect - 1.5 seconds per image, pauses on hover
   useEffect(() => {
+    if (isPaused) return;
+    
     const imageInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % editionImages.length);
-    }, 5000);
+    }, 1500);
     return () => clearInterval(imageInterval);
-  }, []);
+  }, [isPaused]);
 
   const scrollToRegister = () => {
     const element = document.getElementById('register');
@@ -53,34 +75,63 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <section 
+      className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden"
+    >
       {/* Full-screen background slideshow */}
       {editionImages.map((image, index) => (
         <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentImageIndex ? 'opacity-30' : 'opacity-0'
+          key={image}
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            index === currentImageIndex ? 'opacity-60' : 'opacity-0'
           }`}
         >
           <img
             src={image}
-            alt={`Edition ${index + 1}`}
+            alt={`FEEE Past Edition`}
             className="w-full h-full object-cover"
           />
           {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-background/70" />
+          <div className="absolute inset-0 bg-background/50" />
         </div>
       ))}
 
+      {/* Image navigation dots - pause only when hovering here */}
+      <div 
+        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 p-3 rounded-full bg-background/40 backdrop-blur-sm"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {editionImages.map((image, index) => (
+          <button
+            key={image}
+            onClick={() => setCurrentImageIndex(index)}
+            className={`rounded-full transition-all duration-300 ${
+              index === currentImageIndex 
+                ? 'bg-accent w-8 h-3' 
+                : 'bg-white/50 w-3 h-3 hover:bg-white/80'
+            }`}
+            aria-label={`View image ${index + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Current image counter */}
+      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20">
+        <span className="font-mono text-sm text-white/80 tracking-widest drop-shadow-lg">
+          {isPaused ? '⏸ PAUSED' : ''} {currentImageIndex + 1} / {editionImages.length}
+        </span>
+      </div>
+
       {/* Blueprint grid overlay */}
-      <div className="absolute inset-0 blueprint-grid opacity-30" />
+      <div className="absolute inset-0 blueprint-grid opacity-20" />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
         {/* Date Badge */}
         <div className="inline-block mb-8 animate-fade-in-up">
           <div className="border border-primary/40 px-6 py-2 font-mono text-sm text-primary tracking-widest">
-            <span className="text-accent">★</span> MARCH 2025 <span className="text-accent">★</span>
+            <span className="text-accent">★</span> MARCH 2026 <span className="text-accent">★</span>
           </div>
         </div>
 

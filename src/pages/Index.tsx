@@ -6,7 +6,6 @@ import TimelineSection from '@/components/TimelineSection';
 import FeaturesSection from '@/components/FeaturesSection';
 import EditionsGallery from '@/components/EditionsGallery';
 import CompaniesCarousel from '@/components/CompaniesCarousel';
-import PartnersSection from '@/components/PartnersSection';
 import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 
@@ -23,12 +22,11 @@ const Index = () => {
       <main className="relative z-10">
         <HeroSection />
         <AboutSection />
-        <TimelineSection />
-        <FeaturesSection />
-        <EditionsGallery />
         <CompaniesCarousel />
-        <PartnersSection />
+        <FeaturesSection />
         <CTASection />
+        <TimelineSection />
+        <EditionsGallery />
       </main>
       
       {/* Footer */}
