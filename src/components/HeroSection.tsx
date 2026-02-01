@@ -67,8 +67,11 @@ const HeroSection = () => {
         </div>
 
         {/* Slogan */}
-        <p className="font-sans text-xl sm:text-2xl text-muted-foreground mb-12 animate-fade-in-up delay-300">
+        <p className="font-sans text-xl sm:text-2xl text-muted-foreground mb-4 animate-fade-in-up delay-300">
           One room. <span className="text-accent">Infinite possibilities.</span>
+        </p>
+        <p className="font-mono text-sm text-primary/60 mb-12 animate-fade-in-up delay-350 tracking-wider">
+          Your <span className="text-primary">blueprint</span> to success starts here.
         </p>
 
         {/* Countdown */}

@@ -4,6 +4,8 @@ import HeroSection from '@/components/HeroSection';
 import AboutSection from '@/components/AboutSection';
 import TimelineSection from '@/components/TimelineSection';
 import FeaturesSection from '@/components/FeaturesSection';
+import EditionsGallery from '@/components/EditionsGallery';
+import CompaniesCarousel from '@/components/CompaniesCarousel';
 import PartnersSection from '@/components/PartnersSection';
 import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
@@ -23,6 +25,8 @@ const Index = () => {
         <AboutSection />
         <TimelineSection />
         <FeaturesSection />
+        <EditionsGallery />
+        <CompaniesCarousel />
         <PartnersSection />
         <CTASection />
       </main>
