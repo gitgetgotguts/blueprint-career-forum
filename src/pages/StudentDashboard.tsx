@@ -87,9 +87,9 @@ const StudentDashboard = () => {
     navigate('/');
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!currentUser) return;
-    updateStudentProfile(currentUser.id, {
+    await updateStudentProfile(currentUser.id, {
       careerGoal,
       projects: currentUser.studentProfile?.projects || [],
       isProfileComplete: true,
@@ -114,11 +114,11 @@ const StudentDashboard = () => {
     }
   };
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!currentUser || !newProject.title.trim()) return;
     // Use uploaded image preview (base64) or URL
     const imageUrl = projectImagePreview || newProject.imageUrl;
-    addProject(currentUser.id, {
+    await addProject(currentUser.id, {
       title: newProject.title,
       description: newProject.description,
       imageUrl,
@@ -132,10 +132,10 @@ const StudentDashboard = () => {
     setTimeout(() => setApplicationSuccess(''), 3000);
   };
 
-  const handleDeleteProject = (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     if (!currentUser) return;
     if (confirm('Are you sure you want to delete this project?')) {
-      removeProject(currentUser.id, projectId);
+      await removeProject(currentUser.id, projectId);
     }
   };
 
@@ -155,9 +155,9 @@ const StudentDashboard = () => {
 
     // Convert file to base64 for storage
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const cvData = e.target?.result as string;
-      applyToOffer({
+      await applyToOffer({
         offerId,
         studentId: currentUser.id,
         studentName: currentUser.name,

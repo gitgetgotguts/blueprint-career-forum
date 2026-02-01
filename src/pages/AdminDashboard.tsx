@@ -89,7 +89,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    const success = addUser(newUser);
+    const success = await addUser(newUser);
     if (success) {
       setSendingEmail(true);
       const emailSent = await sendWelcomeEmail(
@@ -112,14 +112,14 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (confirm('Are you sure you want to delete this user?')) {
-      deleteUser(id);
+      await deleteUser(id);
     }
   };
 
-  const handleApproveOffer = (offerId: string) => {
-    approveOffer(offerId);
+  const handleApproveOffer = async (offerId: string) => {
+    await approveOffer(offerId);
     setFormSuccess('Offer approved successfully!');
     setTimeout(() => setFormSuccess(''), 3000);
   };
@@ -130,11 +130,11 @@ const AdminDashboard = () => {
     setShowRejectModal(true);
   };
 
-  const handleRejectOffer = () => {
+  const handleRejectOffer = async () => {
     if (!rejectingOfferId || !rejectionReason.trim()) {
       return;
     }
-    rejectOffer(rejectingOfferId, rejectionReason);
+    await rejectOffer(rejectingOfferId, rejectionReason);
     setShowRejectModal(false);
     setRejectingOfferId(null);
     setRejectionReason('');

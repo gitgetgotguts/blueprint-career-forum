@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export type UserRole = 'admin' | 'student' | 'company';
 
@@ -32,53 +33,161 @@ interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;
   users: User[];
-  login: (username: string, password: string) => { success: boolean; role?: UserRole };
+  loading: boolean;
+  login: (username: string, password: string) => Promise<{ success: boolean; role?: UserRole }>;
   logout: () => void;
-  addUser: (user: Omit<User, 'id' | 'createdAt'>) => boolean;
-  deleteUser: (id: string) => void;
+  addUser: (user: Omit<User, 'id' | 'createdAt'>) => Promise<boolean>;
+  deleteUser: (id: string) => Promise<void>;
   getUsers: () => User[];
   getUserById: (id: string) => User | undefined;
-  updateStudentProfile: (userId: string, profile: StudentProfile) => void;
-  addProject: (userId: string, project: Omit<Project, 'id' | 'createdAt'>) => void;
-  removeProject: (userId: string, projectId: string) => void;
-  updateProject: (userId: string, projectId: string, project: Partial<Omit<Project, 'id' | 'createdAt'>>) => void;
+  refreshUsers: () => Promise<void>;
+  updateStudentProfile: (userId: string, profile: StudentProfile) => Promise<void>;
+  addProject: (userId: string, project: Omit<Project, 'id' | 'createdAt'>) => Promise<void>;
+  removeProject: (userId: string, projectId: string) => Promise<void>;
+  updateProject: (userId: string, projectId: string, project: Partial<Omit<Project, 'id' | 'createdAt'>>) => Promise<void>;
 }
-
-const defaultUsers: User[] = [
-  {
-    id: '1',
-    username: 'admin',
-    password: 'admin',
-    role: 'admin',
-    name: 'Administrator',
-    email: 'admin@feee.tn',
-    createdAt: '2024-01-01',
-  },
-];
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [users, setUsers] = useState<User[]>(() => {
-    const stored = localStorage.getItem('feee-users');
-    return stored ? JSON.parse(stored) : defaultUsers;
-  });
-
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const stored = localStorage.getItem('feee-current-user');
     return stored ? JSON.parse(stored) : null;
   });
+  const [loading, setLoading] = useState(true);
 
   const isAuthenticated = currentUser !== null;
 
-  const login = (username: string, password: string): { success: boolean; role?: UserRole } => {
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
+  // Fetch all users with their projects
+  const fetchUsers = async () => {
+    try {
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (profilesError) throw profilesError;
+
+      // Fetch all projects
+      const { data: projects, error: projectsError } = await supabase
+        .from('projects')
+        .select('*');
+
+      if (projectsError) throw projectsError;
+
+      // Map to User format
+      const mappedUsers: User[] = (profiles || []).map(profile => {
+        const userProjects = (projects || [])
+          .filter(p => p.user_id === profile.id)
+          .map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            imageUrl: p.image_url || '',
+            link: p.link || '',
+            createdAt: p.created_at,
+          }));
+
+        const studentProfile: StudentProfile | undefined = profile.role === 'student' ? {
+          careerGoal: profile.career_goal || '',
+          projects: userProjects,
+          isProfileComplete: !!(profile.career_goal || userProjects.length > 0),
+        } : undefined;
+
+        return {
+          id: profile.id,
+          username: profile.username,
+          password: profile.password,
+          role: profile.role as UserRole,
+          name: profile.name,
+          email: profile.email,
+          createdAt: profile.created_at,
+          studentProfile,
+        };
+      });
+
+      setUsers(mappedUsers);
+
+      // Update current user if logged in
+      if (currentUser) {
+        const updatedCurrentUser = mappedUsers.find(u => u.id === currentUser.id);
+        if (updatedCurrentUser) {
+          setCurrentUser(updatedCurrentUser);
+          localStorage.setItem('feee-current-user', JSON.stringify(updatedCurrentUser));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const refreshUsers = async () => {
+    await fetchUsers();
+  };
+
+  const login = async (username: string, password: string): Promise<{ success: boolean; role?: UserRole }> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .single();
+
+      if (error || !data) {
+        return { success: false };
+      }
+
+      // Fetch user's projects if student
+      let studentProfile: StudentProfile | undefined;
+      if (data.role === 'student') {
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', data.id);
+
+        const userProjects = (projects || []).map(p => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          imageUrl: p.image_url || '',
+          link: p.link || '',
+          createdAt: p.created_at,
+        }));
+
+        studentProfile = {
+          careerGoal: data.career_goal || '',
+          projects: userProjects,
+          isProfileComplete: !!(data.career_goal || userProjects.length > 0),
+        };
+      }
+
+      const user: User = {
+        id: data.id,
+        username: data.username,
+        password: data.password,
+        role: data.role as UserRole,
+        name: data.name,
+        email: data.email,
+        createdAt: data.created_at,
+        studentProfile,
+      };
+
       setCurrentUser(user);
       localStorage.setItem('feee-current-user', JSON.stringify(user));
+      await fetchUsers();
       return { success: true, role: user.role };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false };
     }
-    return { success: false };
   };
 
   const logout = () => {
@@ -86,98 +195,117 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('feee-current-user');
   };
 
-  const addUser = (userData: Omit<User, 'id' | 'createdAt'>): boolean => {
-    // Check if username already exists
-    if (users.some(u => u.username === userData.username)) {
+  const addUser = async (userData: Omit<User, 'id' | 'createdAt'>): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          username: userData.username,
+          password: userData.password,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          career_goal: null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding user:', error);
+        return false;
+      }
+
+      await fetchUsers();
+      return true;
+    } catch (error) {
+      console.error('Error adding user:', error);
       return false;
     }
-
-    const newUser: User = {
-      ...userData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem('feee-users', JSON.stringify(updatedUsers));
-    return true;
   };
 
-  const deleteUser = (id: string) => {
-    // Prevent deleting the main admin
-    if (id === '1') return;
-    
-    const updatedUsers = users.filter(u => u.id !== id);
-    setUsers(updatedUsers);
-    localStorage.setItem('feee-users', JSON.stringify(updatedUsers));
+  const deleteUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
 
   const getUsers = () => users;
 
   const getUserById = (id: string) => users.find(u => u.id === id);
 
-  const updateStudentProfile = (userId: string, profile: StudentProfile) => {
-    const updatedUsers = users.map(u => {
-      if (u.id === userId) {
-        return { ...u, studentProfile: profile };
-      }
-      return u;
-    });
-    setUsers(updatedUsers);
-    localStorage.setItem('feee-users', JSON.stringify(updatedUsers));
-    
-    // Update current user if it's the same
-    if (currentUser?.id === userId) {
-      const updatedUser = { ...currentUser, studentProfile: profile };
-      setCurrentUser(updatedUser);
-      localStorage.setItem('feee-current-user', JSON.stringify(updatedUser));
+  const updateStudentProfile = async (userId: string, profile: StudentProfile) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ career_goal: profile.careerGoal })
+        .eq('id', userId);
+
+      if (error) throw error;
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
-  const addProject = (userId: string, project: Omit<Project, 'id' | 'createdAt'>) => {
-    const user = users.find(u => u.id === userId);
-    if (!user || user.role !== 'student') return;
+  const addProject = async (userId: string, project: Omit<Project, 'id' | 'createdAt'>) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          user_id: userId,
+          title: project.title,
+          description: project.description,
+          image_url: project.imageUrl || null,
+          link: project.link || null,
+        });
 
-    const newProject: Project = {
-      ...project,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    const currentProfile = user.studentProfile || { careerGoal: '', projects: [], isProfileComplete: false };
-    const updatedProfile = {
-      ...currentProfile,
-      projects: [...currentProfile.projects, newProject],
-    };
-
-    updateStudentProfile(userId, updatedProfile);
+      if (error) throw error;
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error adding project:', error);
+    }
   };
 
-  const removeProject = (userId: string, projectId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (!user || !user.studentProfile) return;
+  const removeProject = async (userId: string, projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
 
-    const updatedProfile = {
-      ...user.studentProfile,
-      projects: user.studentProfile.projects.filter(p => p.id !== projectId),
-    };
-
-    updateStudentProfile(userId, updatedProfile);
+      if (error) throw error;
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error removing project:', error);
+    }
   };
 
-  const updateProject = (userId: string, projectId: string, projectData: Partial<Omit<Project, 'id' | 'createdAt'>>) => {
-    const user = users.find(u => u.id === userId);
-    if (!user || !user.studentProfile) return;
+  const updateProject = async (userId: string, projectId: string, projectData: Partial<Omit<Project, 'id' | 'createdAt'>>) => {
+    try {
+      const updateData: Record<string, unknown> = {};
+      if (projectData.title) updateData.title = projectData.title;
+      if (projectData.description) updateData.description = projectData.description;
+      if (projectData.imageUrl !== undefined) updateData.image_url = projectData.imageUrl;
+      if (projectData.link !== undefined) updateData.link = projectData.link;
 
-    const updatedProfile = {
-      ...user.studentProfile,
-      projects: user.studentProfile.projects.map(p => 
-        p.id === projectId ? { ...p, ...projectData } : p
-      ),
-    };
+      const { error } = await supabase
+        .from('projects')
+        .update(updateData)
+        .eq('id', projectId);
 
-    updateStudentProfile(userId, updatedProfile);
+      if (error) throw error;
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error updating project:', error);
+    }
   };
 
   return (
@@ -185,12 +313,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated, 
       currentUser, 
       users,
+      loading,
       login, 
       logout, 
       addUser, 
       deleteUser,
       getUsers,
       getUserById,
+      refreshUsers,
       updateStudentProfile,
       addProject,
       removeProject,

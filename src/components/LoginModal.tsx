@@ -14,12 +14,16 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    const result = login(username, password);
+    const result = await login(username, password);
+    setIsLoading(false);
+    
     if (result.success) {
       onClose();
       setUsername('');

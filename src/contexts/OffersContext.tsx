@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Project } from './AuthContext';
 
 export type OfferType = 'job' | 'pfe' | 'stage';
@@ -26,90 +27,217 @@ export interface Application {
   studentName: string;
   studentEmail: string;
   cvFileName: string;
-  cvData: string; // Base64 encoded
+  cvData: string;
   coverLetter: string;
   appliedAt: string;
   status: 'pending' | 'reviewed' | 'accepted' | 'rejected';
-  projects?: Project[]; // Student's portfolio projects
+  projects?: Project[];
 }
 
 interface OffersContextType {
   offers: Offer[];
   applications: Application[];
-  createOffer: (offer: Omit<Offer, 'id' | 'createdAt' | 'status'>) => void;
-  approveOffer: (offerId: string) => void;
-  rejectOffer: (offerId: string, reason: string) => void;
-  applyToOffer: (application: Omit<Application, 'id' | 'appliedAt' | 'status'>) => boolean;
+  loading: boolean;
+  createOffer: (offer: Omit<Offer, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+  approveOffer: (offerId: string) => Promise<void>;
+  rejectOffer: (offerId: string, reason: string) => Promise<void>;
+  applyToOffer: (application: Omit<Application, 'id' | 'appliedAt' | 'status'>) => Promise<boolean>;
   getOffersByCompany: (companyId: string) => Offer[];
   getApprovedOffers: () => Offer[];
   getPendingOffers: () => Offer[];
   getApplicationsByOffer: (offerId: string) => Application[];
   getApplicationsByStudent: (studentId: string) => Application[];
-  updateApplicationStatus: (applicationId: string, status: Application['status']) => void;
+  updateApplicationStatus: (applicationId: string, status: Application['status']) => Promise<void>;
+  refreshOffers: () => Promise<void>;
 }
 
 const OffersContext = createContext<OffersContextType | null>(null);
 
 export const OffersProvider = ({ children }: { children: ReactNode }) => {
-  const [offers, setOffers] = useState<Offer[]>(() => {
-    const stored = localStorage.getItem('feee-offers');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [applications, setApplications] = useState<Application[]>(() => {
-    const stored = localStorage.getItem('feee-applications');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const fetchOffers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const saveOffers = (newOffers: Offer[]) => {
-    setOffers(newOffers);
-    localStorage.setItem('feee-offers', JSON.stringify(newOffers));
+      if (error) throw error;
+
+      const mappedOffers: Offer[] = (data || []).map(o => ({
+        id: o.id,
+        companyId: o.company_id,
+        companyName: o.company_name,
+        title: o.title,
+        type: o.type as OfferType,
+        description: o.description,
+        requirements: o.requirements || '',
+        location: o.location || '',
+        duration: o.duration,
+        createdAt: o.created_at,
+        status: o.status as OfferStatus,
+        rejectionReason: o.rejection_reason,
+      }));
+
+      setOffers(mappedOffers);
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+    }
   };
 
-  const saveApplications = (newApplications: Application[]) => {
-    setApplications(newApplications);
-    localStorage.setItem('feee-applications', JSON.stringify(newApplications));
+  const fetchApplications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('applied_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch projects for each application that has project_ids
+      const mappedApplications: Application[] = await Promise.all(
+        (data || []).map(async (app) => {
+          let projects: Project[] = [];
+          
+          if (app.project_ids && app.project_ids.length > 0) {
+            const { data: projectData } = await supabase
+              .from('projects')
+              .select('*')
+              .in('id', app.project_ids);
+
+            projects = (projectData || []).map(p => ({
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              imageUrl: p.image_url || '',
+              link: p.link || '',
+              createdAt: p.created_at,
+            }));
+          }
+
+          return {
+            id: app.id,
+            offerId: app.offer_id,
+            studentId: app.student_id,
+            studentName: app.student_name,
+            studentEmail: app.student_email,
+            cvFileName: app.cv_filename || '',
+            cvData: app.cv_url || '',
+            coverLetter: app.cover_letter || '',
+            appliedAt: app.applied_at,
+            status: app.status as Application['status'],
+            projects,
+          };
+        })
+      );
+
+      setApplications(mappedApplications);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const createOffer = (offerData: Omit<Offer, 'id' | 'createdAt' | 'status'>) => {
-    const newOffer: Offer = {
-      ...offerData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0],
-      status: 'pending',
-    };
-    saveOffers([...offers, newOffer]);
+  useEffect(() => {
+    fetchOffers();
+    fetchApplications();
+  }, []);
+
+  const refreshOffers = async () => {
+    await fetchOffers();
+    await fetchApplications();
   };
 
-  const approveOffer = (offerId: string) => {
-    const updatedOffers = offers.map(offer =>
-      offer.id === offerId ? { ...offer, status: 'approved' as OfferStatus } : offer
-    );
-    saveOffers(updatedOffers);
+  const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'status'>) => {
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .insert({
+          company_id: offerData.companyId,
+          company_name: offerData.companyName,
+          title: offerData.title,
+          type: offerData.type,
+          description: offerData.description,
+          requirements: offerData.requirements,
+          location: offerData.location,
+          duration: offerData.duration,
+          status: 'pending',
+        });
+
+      if (error) throw error;
+      await fetchOffers();
+    } catch (error) {
+      console.error('Error creating offer:', error);
+    }
   };
 
-  const rejectOffer = (offerId: string, reason: string) => {
-    const updatedOffers = offers.map(offer =>
-      offer.id === offerId ? { ...offer, status: 'rejected' as OfferStatus, rejectionReason: reason } : offer
-    );
-    saveOffers(updatedOffers);
+  const approveOffer = async (offerId: string) => {
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .update({ status: 'approved' })
+        .eq('id', offerId);
+
+      if (error) throw error;
+      await fetchOffers();
+    } catch (error) {
+      console.error('Error approving offer:', error);
+    }
   };
 
-  const applyToOffer = (applicationData: Omit<Application, 'id' | 'appliedAt' | 'status'>): boolean => {
-    // Check if student already applied
-    const alreadyApplied = applications.some(
-      app => app.offerId === applicationData.offerId && app.studentId === applicationData.studentId
-    );
-    if (alreadyApplied) return false;
+  const rejectOffer = async (offerId: string, reason: string) => {
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .update({ status: 'rejected', rejection_reason: reason })
+        .eq('id', offerId);
 
-    const newApplication: Application = {
-      ...applicationData,
-      id: Date.now().toString(),
-      appliedAt: new Date().toISOString(),
-      status: 'pending',
-    };
-    saveApplications([...applications, newApplication]);
-    return true;
+      if (error) throw error;
+      await fetchOffers();
+    } catch (error) {
+      console.error('Error rejecting offer:', error);
+    }
+  };
+
+  const applyToOffer = async (applicationData: Omit<Application, 'id' | 'appliedAt' | 'status'>): Promise<boolean> => {
+    try {
+      // Check if already applied
+      const { data: existing } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('offer_id', applicationData.offerId)
+        .eq('student_id', applicationData.studentId)
+        .single();
+
+      if (existing) return false;
+
+      const projectIds = applicationData.projects?.map(p => p.id) || [];
+
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          offer_id: applicationData.offerId,
+          student_id: applicationData.studentId,
+          student_name: applicationData.studentName,
+          student_email: applicationData.studentEmail,
+          cv_url: applicationData.cvData,
+          cv_filename: applicationData.cvFileName,
+          cover_letter: applicationData.coverLetter,
+          status: 'pending',
+          project_ids: projectIds,
+        });
+
+      if (error) throw error;
+      await fetchApplications();
+      return true;
+    } catch (error) {
+      console.error('Error applying to offer:', error);
+      return false;
+    }
   };
 
   const getOffersByCompany = (companyId: string) => {
@@ -132,17 +260,25 @@ export const OffersProvider = ({ children }: { children: ReactNode }) => {
     return applications.filter(app => app.studentId === studentId);
   };
 
-  const updateApplicationStatus = (applicationId: string, status: Application['status']) => {
-    const updatedApplications = applications.map(app =>
-      app.id === applicationId ? { ...app, status } : app
-    );
-    saveApplications(updatedApplications);
+  const updateApplicationStatus = async (applicationId: string, status: Application['status']) => {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+      await fetchApplications();
+    } catch (error) {
+      console.error('Error updating application status:', error);
+    }
   };
 
   return (
     <OffersContext.Provider value={{
       offers,
       applications,
+      loading,
       createOffer,
       approveOffer,
       rejectOffer,
@@ -153,6 +289,7 @@ export const OffersProvider = ({ children }: { children: ReactNode }) => {
       getApplicationsByOffer,
       getApplicationsByStudent,
       updateApplicationStatus,
+      refreshOffers,
     }}>
       {children}
     </OffersContext.Provider>

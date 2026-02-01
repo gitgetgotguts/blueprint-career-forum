@@ -87,11 +87,11 @@ const CompanyDashboard = () => {
     navigate('/');
   };
 
-  const handleCreateOffer = (e: React.FormEvent) => {
+  const handleCreateOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
 
-    createOffer({
+    await createOffer({
       companyId: currentUser.id,
       companyName: currentUser.name,
       title: newOffer.title,
