@@ -19,27 +19,27 @@ const Presentation = () => {
             FORUM ENET'COM ENTREPRISE ÉTUDIANT
           </h1>
           <div className="max-w-3xl text-center space-y-4">
-            <h2 className="font-heading text-2xl text-accent mb-4">WHY THE BLUEPRINT THEME?</h2>
+            <h2 className="font-heading text-2xl text-accent mb-4">POURQUOI LE THÈME BLUEPRINT ?</h2>
             <ul className="text-lg text-foreground/90 space-y-3 text-left">
               <li className="flex items-start gap-3">
                 <span className="text-primary">▸</span>
-                <span><strong className="text-accent">Building Futures</strong> - A blueprint represents planning and construction, symbolizing how students build their careers</span>
+                <span><strong className="text-accent">Construire l'Avenir</strong> - Un blueprint représente la planification et la construction, symbolisant comment les étudiants bâtissent leur carrière</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-primary">▸</span>
-                <span><strong className="text-accent">Engineering Identity</strong> - Perfect for ENET'COM as an engineering school, connecting technical aesthetics with professionalism</span>
+                <span><strong className="text-accent">Identité Ingénieur</strong> - Parfait pour ENET'COM en tant qu'école d'ingénieurs, alliant esthétique technique et professionnalisme</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-primary">▸</span>
-                <span><strong className="text-accent">Professional & Modern</strong> - Clean, technical design that appeals to both students and corporate partners</span>
+                <span><strong className="text-accent">Professionnel & Moderne</strong> - Design épuré et technique qui séduit étudiants et partenaires entreprises</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-primary">▸</span>
-                <span><strong className="text-accent">Connecting the Dots</strong> - The grid pattern represents the network between students, companies, and opportunities</span>
+                <span><strong className="text-accent">Connecter les Points</strong> - Le motif en grille représente le réseau entre étudiants, entreprises et opportunités</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-primary">▸</span>
-                <span><strong className="text-accent">Editions Gallery</strong> - A wayback machine showcasing photos from all past editions, honoring our roots and history</span>
+                <span><strong className="text-accent">Galerie des Éditions</strong> - Une machine à remonter le temps présentant les photos de toutes les éditions passées, honorant nos racines et notre histoire</span>
               </li>
             </ul>
           </div>
@@ -53,55 +53,55 @@ const Presentation = () => {
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex items-center gap-4 mb-8">
             <Shield className="w-16 h-16 text-red-500" />
-            <h2 className="font-heading text-4xl text-red-500">ADMIN DASHBOARD</h2>
+            <h2 className="font-heading text-4xl text-red-500">TABLEAU DE BORD ADMIN</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-primary mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                User Management
+                Gestion des Utilisateurs
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Create student & company accounts</li>
-                <li>• Auto-send welcome emails with credentials</li>
-                <li>• View and delete users</li>
-                <li>• Manage all user data</li>
+                <li>• Créer des comptes étudiants & entreprises</li>
+                <li>• Envoi automatique d'emails de bienvenue</li>
+                <li>• Voir et supprimer les utilisateurs</li>
+                <li>• Gérer toutes les données utilisateurs</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-accent mb-4 flex items-center gap-2">
                 <Briefcase className="w-5 h-5" />
-                Offer Moderation
+                Modération des Offres
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Review pending job offers</li>
-                <li>• Approve or reject with feedback</li>
-                <li>• Filter by status (pending/approved/rejected)</li>
-                <li>• View all offer details</li>
+                <li>• Examiner les offres en attente</li>
+                <li>• Approuver ou rejeter avec feedback</li>
+                <li>• Filtrer par statut (en attente/approuvé/rejeté)</li>
+                <li>• Voir tous les détails des offres</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-green-500 mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
-                Analytics Dashboard
+                Tableau de Bord Analytique
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Real-time statistics from database</li>
-                <li>• Acceptance rates & engagement metrics</li>
-                <li>• Top companies & popular offers</li>
-                <li>• Recent activity tracking</li>
+                <li>• Statistiques en temps réel</li>
+                <li>• Taux d'acceptation & métriques d'engagement</li>
+                <li>• Top entreprises & offres populaires</li>
+                <li>• Suivi des activités récentes</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-purple-500 mb-4 flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Company Overview
+                Aperçu des Entreprises
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• View all registered companies</li>
-                <li>• Track company activity</li>
-                <li>• Monitor partner engagement</li>
-                <li>• Export data reports</li>
+                <li>• Voir toutes les entreprises inscrites</li>
+                <li>• Suivre l'activité des entreprises</li>
+                <li>• Surveiller l'engagement des partenaires</li>
+                <li>• Exporter des rapports de données</li>
               </ul>
             </div>
           </div>
@@ -115,58 +115,58 @@ const Presentation = () => {
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex items-center gap-4 mb-8">
             <Building2 className="w-16 h-16 text-accent" />
-            <h2 className="font-heading text-4xl text-accent">COMPANY DASHBOARD</h2>
+            <h2 className="font-heading text-4xl text-accent">TABLEAU DE BORD ENTREPRISE</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-primary mb-4 flex items-center gap-2">
                 <Briefcase className="w-5 h-5" />
-                Post Job Offers
+                Publier des Offres
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Create Stage, PFE, or Job offers</li>
-                <li>• Set requirements & duration</li>
-                <li>• Specify location & details</li>
-                <li>• Submit for admin approval</li>
+                <li>• Créer des offres Stage, PFE ou Emploi</li>
+                <li>• Définir les exigences & la durée</li>
+                <li>• Préciser le lieu & les détails</li>
+                <li>• Soumettre pour approbation admin</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-green-500 mb-4 flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                Track Offers
+                Suivre les Offres
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• View all submitted offers</li>
-                <li>• Check approval status</li>
-                <li>• See rejection reasons</li>
-                <li>• Monitor application count</li>
+                <li>• Voir toutes les offres soumises</li>
+                <li>• Vérifier le statut d'approbation</li>
+                <li>• Voir les raisons de rejet</li>
+                <li>• Surveiller le nombre de candidatures</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-purple-500 mb-4 flex items-center gap-2">
                 <Send className="w-5 h-5" />
-                Manage Applications
+                Gérer les Candidatures
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Review student applications</li>
-                <li>• Download CVs (PDF)</li>
-                <li>• Accept or reject candidates</li>
-                <li>• <strong className="text-yellow-500">Rejections require feedback</strong></li>
+                <li>• Examiner les candidatures étudiantes</li>
+                <li>• Télécharger les CV (PDF)</li>
+                <li>• Accepter ou refuser les candidats</li>
+                <li>• <strong className="text-yellow-500">Les refus nécessitent un feedback</strong></li>
               </ul>
               <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-500">
-                📝 Constructive feedback helps students improve for future opportunities
+                📝 Un feedback constructif aide les étudiants à s'améliorer pour les opportunités futures
               </div>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-accent mb-4 flex items-center gap-2">
                 <GraduationCap className="w-5 h-5" />
-                View Student Profiles
+                Voir les Profils Étudiants
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Access applicant profiles</li>
-                <li>• View career goals & about</li>
-                <li>• Browse portfolio projects</li>
-                <li>• See project thumbnails & links</li>
+                <li>• Accéder aux profils des candidats</li>
+                <li>• Voir les objectifs de carrière & bio</li>
+                <li>• Parcourir les projets portfolio</li>
+                <li>• Voir les miniatures & liens des projets</li>
               </ul>
             </div>
           </div>
@@ -180,58 +180,58 @@ const Presentation = () => {
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex items-center gap-4 mb-8">
             <GraduationCap className="w-16 h-16 text-primary" />
-            <h2 className="font-heading text-4xl text-primary">STUDENT DASHBOARD</h2>
+            <h2 className="font-heading text-4xl text-primary">TABLEAU DE BORD ÉTUDIANT</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-accent mb-4 flex items-center gap-2">
                 <Briefcase className="w-5 h-5" />
-                Browse Opportunities
+                Parcourir les Opportunités
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• View all approved offers</li>
-                <li>• Filter by type (Stage/PFE/Job)</li>
-                <li>• See company details</li>
-                <li>• Check requirements & location</li>
+                <li>• Voir toutes les offres approuvées</li>
+                <li>• Filtrer par type (Stage/PFE/Emploi)</li>
+                <li>• Voir les détails entreprise</li>
+                <li>• Vérifier les exigences & le lieu</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-green-500 mb-4 flex items-center gap-2">
                 <Send className="w-5 h-5" />
-                Apply with CV
+                Postuler avec CV
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• One-click application</li>
-                <li>• Upload CV as PDF</li>
-                <li>• Add cover letter message</li>
-                <li>• Track application status</li>
+                <li>• Candidature en un clic</li>
+                <li>• Téléverser son CV en PDF</li>
+                <li>• Ajouter une lettre de motivation</li>
+                <li>• Suivre le statut de candidature</li>
               </ul>
             </div>
             <div className="blueprint-card p-6">
               <h3 className="font-heading text-xl text-purple-500 mb-4 flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                Track Applications
+                Suivre les Candidatures
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• View all sent applications</li>
-                <li>• Filter by status</li>
-                <li>• See company feedback</li>
-                <li>• Monitor acceptance/rejection</li>
+                <li>• Voir toutes les candidatures envoyées</li>
+                <li>• Filtrer par statut</li>
+                <li>• Voir le feedback entreprise</li>
+                <li>• Surveiller acceptation/refus</li>
               </ul>
             </div>
             <div className="blueprint-card p-6 border-2 border-accent/50">
               <h3 className="font-heading text-xl text-primary mb-4 flex items-center gap-2">
                 <FolderOpen className="w-5 h-5" />
-                Build Your Profile
+                Construire son Profil
               </h3>
               <ul className="space-y-2 text-foreground/80">
-                <li>• Set career goals & bio</li>
-                <li>• <strong className="text-accent">Add portfolio projects</strong></li>
-                <li>• Upload project thumbnails</li>
-                <li>• Include GitHub/demo links</li>
+                <li>• Définir ses objectifs de carrière & bio</li>
+                <li>• <strong className="text-accent">Ajouter des projets portfolio</strong></li>
+                <li>• Téléverser des miniatures de projets</li>
+                <li>• Inclure liens GitHub/démo</li>
               </ul>
               <div className="mt-3 p-2 bg-accent/10 border border-accent/30 text-xs text-accent">
-                ⭐ Projects showcase your skills to companies and increase your chances of getting hired!
+                ⭐ Les projets démontrent vos compétences aux entreprises et augmentent vos chances d'être recruté !
               </div>
             </div>
           </div>
@@ -243,57 +243,92 @@ const Presentation = () => {
       title: 'Technology Stack',
       content: (
         <div className="flex flex-col items-center justify-center h-full">
-          <h2 className="font-heading text-4xl text-primary mb-8">TECHNOLOGY STACK</h2>
+          <h2 className="font-heading text-4xl text-primary mb-6">STACK TECHNOLOGIQUE</h2>
+          <p className="text-center text-accent mb-6 max-w-2xl text-sm">
+            💡 Pourquoi ce stack ? <strong>Simple, moderne et suffisant</strong> — pas de surcharge, juste ce qu'il faut.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
             <div className="blueprint-card p-6 text-center">
               <div className="text-4xl mb-4">⚛️</div>
               <h3 className="font-heading text-xl text-primary mb-2">Frontend</h3>
               <ul className="space-y-1 text-foreground/80 text-sm">
                 <li>React 18 + TypeScript</li>
-                <li>Vite (Fast Build Tool)</li>
+                <li>Vite (Outil de Build Rapide)</li>
                 <li>Tailwind CSS</li>
-                <li>Shadcn/UI Components</li>
+                <li>Composants Shadcn/UI</li>
               </ul>
+              <div className="mt-3 p-2 bg-primary/10 border border-primary/30 text-xs text-primary">
+                ✓ React = standard industrie<br/>
+                ✓ Vite = 10x plus rapide que Webpack<br/>
+                ✓ Tailwind = pas besoin de CSS custom
+              </div>
             </div>
             <div className="blueprint-card p-6 text-center">
               <div className="text-4xl mb-4">🗄️</div>
               <h3 className="font-heading text-xl text-green-500 mb-2">Backend</h3>
               <ul className="space-y-1 text-foreground/80 text-sm">
                 <li>Supabase (PostgreSQL)</li>
-                <li>Real-time Database</li>
-                <li>Row Level Security</li>
-                <li>RESTful API</li>
+                <li>Base de Données Temps Réel</li>
+                <li>Sécurité au Niveau des Lignes</li>
+                <li>API RESTful</li>
               </ul>
+              <div className="mt-3 p-2 bg-green-500/10 border border-green-500/30 text-xs text-green-500">
+                ✓ Pas besoin de serveur Node.js<br/>
+                ✓ Auth + DB + Storage intégrés<br/>
+                ✓ Gratuit pour petits projets
+              </div>
             </div>
             <div className="blueprint-card p-6 text-center">
               <div className="text-4xl mb-4">✉️</div>
               <h3 className="font-heading text-xl text-accent mb-2">Services</h3>
               <ul className="space-y-1 text-foreground/80 text-sm">
-                <li>EmailJS Integration</li>
-                <li>Auto Welcome Emails</li>
-                <li>PDF CV Handling</li>
-                <li>Base64 Image Storage</li>
+                <li>Intégration EmailJS</li>
+                <li>Emails de Bienvenue Auto</li>
+                <li>Gestion des CV PDF</li>
+                <li>Stockage Images Base64</li>
               </ul>
+              <div className="mt-3 p-2 bg-accent/10 border border-accent/30 text-xs text-accent">
+                ✓ Emails sans backend SMTP<br/>
+                ✓ 200 emails/mois gratuits<br/>
+                ✓ Intégration en 5 minutes
+              </div>
             </div>
           </div>
-          <div className="mt-8 blueprint-card p-6 max-w-3xl">
-            <h3 className="font-heading text-xl text-purple-500 mb-4 text-center">Key Features</h3>
+          <div className="mt-6 blueprint-card p-4 max-w-4xl border-2 border-yellow-500/50">
+            <h3 className="font-heading text-lg text-yellow-500 mb-3 text-center">🎯 Pourquoi pas plus ?</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="flex items-start gap-2">
+                <span className="text-red-500">✗</span>
+                <span><strong>Pas de Node.js/Express</strong> — Supabase fournit déjà l'API</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-500">✗</span>
+                <span><strong>Pas de Docker</strong> — Déploiement statique simple</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-500">✗</span>
+                <span><strong>Pas de microservices</strong> — Overengineering inutile</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 blueprint-card p-4 max-w-3xl">
+            <h3 className="font-heading text-lg text-purple-500 mb-3 text-center">Fonctionnalités Clés</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
               <div className="p-2 border border-primary/30">
-                <div className="font-heading text-primary">3 Roles</div>
-                <div className="text-foreground/60">Admin, Company, Student</div>
+                <div className="font-heading text-primary">3 Rôles</div>
+                <div className="text-foreground/60">Admin, Entreprise, Étudiant</div>
               </div>
               <div className="p-2 border border-primary/30">
-                <div className="font-heading text-accent">Real Analytics</div>
-                <div className="text-foreground/60">Live Dashboard Stats</div>
+                <div className="font-heading text-accent">Analytiques</div>
+                <div className="text-foreground/60">Stats en Temps Réel</div>
               </div>
               <div className="p-2 border border-primary/30">
-                <div className="font-heading text-green-500">Full Workflow</div>
-                <div className="text-foreground/60">Post → Approve → Apply</div>
+                <div className="font-heading text-green-500">Flux Complet</div>
+                <div className="text-foreground/60">Publier → Approuver → Postuler</div>
               </div>
               <div className="p-2 border border-primary/30">
                 <div className="font-heading text-purple-500">Responsive</div>
-                <div className="text-foreground/60">Mobile Friendly</div>
+                <div className="text-foreground/60">Compatible Mobile</div>
               </div>
             </div>
           </div>
@@ -376,7 +411,7 @@ const Presentation = () => {
 
       {/* Keyboard hint */}
       <div className="absolute bottom-6 left-6 font-mono text-xs text-muted-foreground z-20">
-        Use ← → arrows or click to navigate
+        Utilisez ← → ou cliquez pour naviguer
       </div>
     </div>
   );
