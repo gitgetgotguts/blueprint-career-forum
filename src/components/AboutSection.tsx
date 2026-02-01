@@ -43,31 +43,34 @@ const AboutSection = () => {
           {/* Content */}
           <div className="space-y-6">
             <div className="scroll-reveal">
+              <p className="text-xl text-accent font-heading leading-relaxed mb-2">
+                Like any great engineering project, your career deserves a solid blueprint.
+              </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                <span className="text-primary font-semibold">FEEE</span> (Forum ENET'COM Entreprise Étudiant) is the premier annual career forum organized by students at the National School of Electronics and Telecommunications of Sfax, Tunisia.
+                <span className="text-primary font-semibold">FEEE</span> — Tunisia's largest student-run career forum. 1 day. 50+ companies. 1000+ engineering students. Direct access to internships and jobs.
               </p>
             </div>
 
             <div className="scroll-reveal">
               <p className="text-muted-foreground leading-relaxed">
-                Since its inception in <span className="text-accent font-mono">2014</span>, FEEE has grown into one of Tunisia's most significant career events, bridging the gap between academia and industry.
+                Organized by <span className="text-primary">ENET'COM</span> students since <span className="text-accent font-mono">2014</span>. Real connections. Real opportunities.
               </p>
             </div>
 
             <div className="blueprint-card p-6 scroll-reveal">
-              <h3 className="font-heading text-xl text-primary mb-4">OUR MISSION</h3>
-              <ul className="space-y-3 font-mono text-sm">
+              <h3 className="font-heading text-2xl text-primary font-bold mb-4">WHAT YOU GET</h3>
+              <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <span className="text-accent">▸</span>
-                  <span className="text-muted-foreground">Connect engineering students with industry leaders</span>
+                  <span className="text-accent font-bold text-lg">▸</span>
+                  <span className="text-white font-semibold text-base">Meet recruiters from top tech companies face-to-face</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-accent">▸</span>
-                  <span className="text-muted-foreground">Discover internship and career opportunities</span>
+                  <span className="text-accent font-bold text-lg">▸</span>
+                  <span className="text-white font-semibold text-base">Land internships and job offers on the spot</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-accent">▸</span>
-                  <span className="text-muted-foreground">Bridge the gap between academic learning and professional world</span>
+                  <span className="text-accent font-bold text-lg">▸</span>
+                  <span className="text-white font-semibold text-base">Learn from industry experts in hands-on workshops</span>
                 </li>
               </ul>
             </div>

@@ -37,13 +37,13 @@ const Footer = () => {
             <h3 className="font-heading text-lg mb-4 text-primary">CONNECT</h3>
             <div className="flex flex-col gap-3">
               <a
-                href="https://www.enetcom.tn"
+                href="https://enetcom.rnu.tn/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 font-mono text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 <Globe className="w-4 h-4" />
-                enetcom.tn
+                enetcom.rnu.tn
               </a>
               <a
                 href="https://linkedin.com/company/enetcom"

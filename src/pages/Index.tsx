@@ -25,8 +25,8 @@ const Index = () => {
         <CompaniesCarousel />
         <FeaturesSection />
         <CTASection />
-        <TimelineSection />
         <EditionsGallery />
+        <TimelineSection />
       </main>
       
       {/* Footer */}

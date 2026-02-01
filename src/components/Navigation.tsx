@@ -27,11 +27,12 @@ const Navigation = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 border border-primary/60 flex items-center justify-center">
-              <span className="font-heading text-lg text-primary">FE</span>
-            </div>
-            <span className="font-mono text-xs text-muted-foreground hidden sm:block">FEEE-11</span>
+          <div className="flex items-center">
+            <img 
+              src="/logo-free.png" 
+              alt="FEEE Logo" 
+              className="h-56 w-auto"
+            />
           </div>
 
           {/* Navigation Links */}

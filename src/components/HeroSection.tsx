@@ -37,8 +37,8 @@ const HeroSection = () => {
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    // Set target date to March 15, 2026
-    const targetDate = new Date('2026-03-15T09:00:00').getTime();
+    // Set target date to December 15, 2026
+    const targetDate = new Date('2026-12-15T09:00:00').getTime();
 
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -92,7 +92,7 @@ const HeroSection = () => {
             className="w-full h-full object-cover"
           />
           {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-background/50" />
+          <div className="absolute inset-0 bg-background/60" />
         </div>
       ))}
 
@@ -131,7 +131,7 @@ const HeroSection = () => {
         {/* Date Badge */}
         <div className="inline-block mb-8 animate-fade-in-up">
           <div className="border border-primary/40 px-6 py-2 font-mono text-sm text-primary tracking-widest">
-            <span className="text-accent">★</span> MARCH 2026 <span className="text-accent">★</span>
+            <span className="text-accent">★</span> DECEMBER 2026 <span className="text-accent">★</span>
           </div>
         </div>
 
@@ -151,11 +151,11 @@ const HeroSection = () => {
         </div>
 
         {/* Slogan */}
-        <p className="font-sans text-xl sm:text-2xl text-muted-foreground mb-4 animate-fade-in-up delay-300">
+        <p className="font-heading text-2xl sm:text-3xl text-white font-bold mb-4 animate-fade-in-up delay-300 drop-shadow-lg">
           One room. <span className="text-accent">Infinite possibilities.</span>
         </p>
-        <p className="font-mono text-sm text-primary/60 mb-12 animate-fade-in-up delay-350 tracking-wider">
-          Your <span className="text-primary">blueprint</span> to success starts here.
+        <p className="font-heading text-xl sm:text-2xl text-primary font-semibold mb-12 animate-fade-in-up delay-350 tracking-wide drop-shadow-lg">
+          Your <span className="text-accent font-bold">blueprint</span> to success starts here.
         </p>
 
         {/* Countdown */}

@@ -158,7 +158,7 @@ const FeaturesSection = () => {
         {/* Bottom annotation */}
         <div className="text-center mt-12 scroll-reveal">
           <span className="font-mono text-xs text-muted-foreground/40 tracking-widest">
-            — 6 MODULES • 2 DAYS • UNLIMITED OPPORTUNITIES —
+            — 6 MODULES • 1 DAY • UNLIMITED OPPORTUNITIES —
           </span>
         </div>
       </div>
