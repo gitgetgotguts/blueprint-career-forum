@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react';
-import BuildingIllustration from './illustrations/BuildingIllustration';
+
+// Placeholder images for past editions - replace with actual images later
+const editionImages = [
+  '/placeholder.svg', // Edition 1 - replace with actual image
+  '/placeholder.svg', // Edition 2 - replace with actual image
+  '/placeholder.svg', // Edition 3 - replace with actual image
+  '/placeholder.svg', // Edition 4 - replace with actual image
+  '/placeholder.svg', // Edition 5 - replace with actual image
+];
 
 const HeroSection = () => {
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     // Set target date to March 15, 2025
@@ -28,6 +37,14 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Image slideshow effect
+  useEffect(() => {
+    const imageInterval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % editionImages.length);
+    }, 5000);
+    return () => clearInterval(imageInterval);
+  }, []);
+
   const scrollToRegister = () => {
     const element = document.getElementById('register');
     if (element) {
@@ -37,10 +54,26 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-      {/* Building Illustration */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-        <BuildingIllustration className="w-full max-w-4xl h-auto" />
-      </div>
+      {/* Full-screen background slideshow */}
+      {editionImages.map((image, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            index === currentImageIndex ? 'opacity-30' : 'opacity-0'
+          }`}
+        >
+          <img
+            src={image}
+            alt={`Edition ${index + 1}`}
+            className="w-full h-full object-cover"
+          />
+          {/* Dark overlay for better text readability */}
+          <div className="absolute inset-0 bg-background/70" />
+        </div>
+      ))}
+
+      {/* Blueprint grid overlay */}
+      <div className="absolute inset-0 blueprint-grid opacity-30" />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
